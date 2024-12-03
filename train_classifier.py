@@ -1,4 +1,4 @@
-# Génération des données : 
+# 1.Génération des données : 
 
 # Importation des bibliothèques
 
@@ -45,7 +45,9 @@ if __name__ == "__main__":
     data.to_csv("synthetic_data.csv", index=False)
     print("Données générées et sauvegardées dans synthetic_data.csv")
 
- # Fonction pour diviser les données
+# 2. Classification :
+
+# Fonction pour diviser les données
 def split_data(X, y):
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=1/3, random_state=42)
@@ -70,32 +72,58 @@ def plot_confusion_matrix(y_test, y_pred, model_name):
     plt.title(f"Matrice de Confusion - {model_name}")
     plt.show()
 
-# Fonction pour choisir un modèle
-def get_model_by_choice(choice):
-    models = {
-        "random_forest": RandomForestClassifier(random_state=42),
-        "logistic_regression": LogisticRegression(max_iter=1000, random_state=42),
-        "svm": SVC(random_state=42)
-    }
-    if choice not in models:
-        raise ValueError("Choix non valide. Options : 'random_forest', 'logistic_regression', 'svm'.")
-    return models[choice]
+# Fonction pour optimiser les hyperparamètres avec Grid Search
+def optimize_model_with_grid_search(model, param_grid, X_train, y_train, cv=5):
+    print(f"\nOptimisation des hyperparamètres pour le modèle : {type(model).__name__}")
+    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=cv, scoring='accuracy', verbose=2)
+    grid_search.fit(X_train, y_train)
+    print(f"Meilleurs paramètres trouvés : {grid_search.best_params_}")
+    return grid_search.best_estimator_
 
 # Fonction pour entraîner et évaluer un modèle unique
 def train_and_evaluate(X_train, y_train, X_test, y_test, model_choice):
-    model = get_model_by_choice(model_choice)
+    models = {
+        "random_forest": (
+            RandomForestClassifier(random_state=42),
+            {
+                'n_estimators': [50, 100, 200],
+                'max_depth': [None, 10, 20],
+                'min_samples_split': [2, 5],
+                'min_samples_leaf': [1, 2]
+            }
+        ),
+        "logistic_regression": (
+            LogisticRegression(max_iter=1000, random_state=42),
+            {
+                'C': [0.1, 1.0, 10.0],
+                'solver': ['liblinear', 'lbfgs']
+            }
+        ),
+        "svm": (
+            SVC(random_state=42),
+            {
+                'C': [0.1, 1, 10],
+                'kernel': ['linear', 'rbf', 'poly']
+            }
+        )
+    }
 
-    # Cross-validation
-    print(f"\nEntraînement et cross-validation pour le modèle : {model_choice}")
-    evaluate_with_cross_validation(X_train, y_train, model)
+    if model_choice not in models:
+        raise ValueError("Modèle non pris en charge. Choisissez parmi : random_forest, logistic_regression, svm.")
 
-    # Entraîner le modèle
-    model.fit(X_train, y_train)
+    model, param_grid = models[model_choice]
+
+    # Optimisation des hyperparamètres
+    optimized_model = optimize_model_with_grid_search(model, param_grid, X_train, y_train)
+
+    # Entraîner le modèle optimisé
+    print(f"\nEntraînement du modèle optimisé : {model_choice}")
+    optimized_model.fit(X_train, y_train)
     print(f"Modèle {model_choice} entraîné avec succès.")
 
-    # Prédictions et évaluation
-    y_pred = model.predict(X_test)
-    print("\nÉvaluation du modèle :")
+    # Évaluation du modèle optimisé
+    y_pred = optimized_model.predict(X_test)
+    print("\nÉvaluation du modèle optimisé :")
     print(classification_report(y_test, y_pred))
 
     # Matrice de confusion
@@ -104,27 +132,47 @@ def train_and_evaluate(X_train, y_train, X_test, y_test, model_choice):
 # Fonction pour entraîner et évaluer plusieurs modèles
 def evaluate_multiple_models(X_train, y_train, X_test, y_test):
     models = {
-        "Random Forest": RandomForestClassifier(random_state=42),
-        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
-        "SVM": SVC(random_state=42)
+        "Random Forest": (
+            RandomForestClassifier(random_state=42),
+            {
+                'n_estimators': [50, 100, 200],
+                'max_depth': [None, 10, 20],
+                'min_samples_split': [2, 5],
+                'min_samples_leaf': [1, 2]
+            }
+        ),
+        "Logistic Regression": (
+            LogisticRegression(max_iter=1000, random_state=42),
+            {
+                'C': [0.1, 1.0, 10.0],
+                'solver': ['liblinear', 'lbfgs']
+            }
+        ),
+        "SVM": (
+            SVC(random_state=42),
+            {
+                'C': [0.1, 1, 10],
+                'kernel': ['linear', 'rbf', 'poly']
+            }
+        )
     }
 
     results = {}
-    for name, model in models.items():
-        print(f"\nEntraînement et évaluation du modèle : {name}")
+    for model_name, (model, param_grid) in models.items():
+        print(f"\nOptimisation et évaluation du modèle : {model_name}")
 
-        # Cross-validation
-        mean_accuracy = evaluate_with_cross_validation(X_train, y_train, model)
+        # Optimisation des hyperparamètres
+        optimized_model = optimize_model_with_grid_search(model, param_grid, X_train, y_train)
 
-        # Entraîner et évaluer
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        test_accuracy = model.score(X_test, y_test)
+        # Évaluation
+        optimized_model.fit(X_train, y_train)
+        y_pred = optimized_model.predict(X_test)
+        test_accuracy = optimized_model.score(X_test, y_test)
         print(classification_report(y_test, y_pred))
-        plot_confusion_matrix(y_test, y_pred, name)
+        plot_confusion_matrix(y_test, y_pred, model_name)
 
         # Stocker les résultats
-        results[name] = {"Cross-Validation Accuracy": mean_accuracy, "Test Accuracy": test_accuracy}
+        results[model_name] = {"Test Accuracy": test_accuracy}
 
     print("\nRésumé des performances :")
     for model, scores in results.items():
@@ -143,8 +191,8 @@ def main():
 
     # Menu interactif pour le choix
     print("\nVoulez-vous :")
-    print("1 - Tester un seul modèle")
-    print("2 - Tester plusieurs modèles en même temps")
+    print("1 - Tester un seul modèle avec optimisation")
+    print("2 - Tester plusieurs modèles avec optimisation")
     choice = input("Entrez votre choix (1 ou 2) : ")
 
     if choice == "1":
@@ -166,4 +214,3 @@ def main():
 # Lancer le script
 if __name__ == "__main__":
     main()
-
