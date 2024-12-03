@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: training_container
+    command: python train_classifier.py
+    volumes:
+      - ./outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  prediction:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prediction_container
+    command: python predict_classification.py
+    depends_on:
+      - training
+    volumes:
+      - ./outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+
+
