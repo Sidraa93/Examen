@@ -57,6 +57,65 @@ def split_data(X, y):
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=1/3, random_state=42)
     print(f"Taille des ensembles :\n- Entraînement : {len(X_train)}\n- Test : {len(X_test)}\n- Validation : {len(X_val)}")
     return X_train, X_test, X_val, y_train, y_test, y_val
+# Fonction pour entraîner et évaluer un modèle unique
+def train_and_evaluate(X_train, y_train, X_test, y_test, model_choice):
+    """
+    Entraîne et évalue un modèle choisi.
+    """
+    models = {
+        "random_forest": RandomForestClassifier(random_state=42),
+        "logistic_regression": LogisticRegression(max_iter=1000, random_state=42),
+        "svm": SVC(random_state=42)
+    }
+
+    if model_choice not in models:
+        raise ValueError("Choix invalide. Options disponibles : 'random_forest', 'logistic_regression', 'svm'.")
+
+    model = models[model_choice]
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+    print("\nRapport de classification :")
+    print(classification_report(y_test, y_pred))
+
+    # Affiche la matrice de confusion
+    plot_confusion_matrix(y_test, y_pred, model_choice)
+
+    return model
+
+def evaluate_multiple_models(X_train, y_train, X_test, y_test):
+    """
+    Entraîne et évalue plusieurs modèles.
+    """
+    models = {
+        "Random Forest": RandomForestClassifier(random_state=42),
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
+        "SVM": SVC(random_state=42)
+    }
+
+    best_model = None
+    best_score = 0
+
+    for model_name, model in models.items():
+        print(f"\nEntraînement et évaluation du modèle : {model_name}")
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+
+        # Évaluation des performances
+        test_accuracy = model.score(X_test, y_test)
+        print(f"Précision : {test_accuracy:.2f}")
+        print(classification_report(y_test, y_pred))
+
+        # Affiche la matrice de confusion
+        plot_confusion_matrix(y_test, y_pred, model_name)
+
+        if test_accuracy > best_score:
+            best_score = test_accuracy
+            best_model = model
+
+    print(f"\nMeilleur modèle : {type(best_model).__name__} avec une précision de {best_score:.2f}")
+    return best_model
+
 
 # 3. Cross-validation et évaluation
 def evaluate_with_cross_validation(X_train, y_train, model, cv=5):
@@ -111,22 +170,22 @@ def export_model_and_validation_data(model, X_val, y_val, model_filename="traine
 
 # 7. Fonction principale
 def main():
-# Génération et sauvegarde des données
+    # Génération et sauvegarde des données
     data = generate_data()
     data.to_csv("synthetic_data.csv", index=False)
     print(f"Données générées et sauvegardées dans synthetic_data.csv")
 
-# Chargement des données
+    # Chargement des données
     X = data.drop(columns=["target"]).values
     y = data["target"].values
 
-# Division des données
+    # Division des données
     X_train, X_test, X_val, y_train, y_test, y_val = split_data(X, y)
 
-# Menu interactif
+    # Menu interactif
     print("\nVoulez-vous :")
-    print("1 - Tester un seul modèle avec optimisation")
-    print("2 - Tester plusieurs modèles avec optimisation")
+    print("1 - Tester un seul modèle")
+    print("2 - Tester plusieurs modèles")
     choice = input("Entrez votre choix (1 ou 2) : ")
 
     if choice == "1":
@@ -135,13 +194,14 @@ def main():
         print("- logistic_regression")
         print("- svm")
         model_choice = input("Entrez le nom du modèle : ")
-        train_and_evaluate(X_train, y_train, X_test, y_test, model_choice)
+        model = train_and_evaluate(X_train, y_train, X_test, y_test, model_choice)
     elif choice == "2":
-        evaluate_multiple_models(X_train, y_train, X_test, y_test)
+        model = evaluate_multiple_models(X_train, y_train, X_test, y_test)
     else:
         print("Choix invalide. Veuillez relancer le programme.")
+        return
 
-# Exporter le modèle et les données de validation
+    # Exporter le modèle et les données de validation
     export_model_and_validation_data(
         model,
         X_val,
