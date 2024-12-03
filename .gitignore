@@ -4,3 +4,4 @@
 model_entrainé.pkl
 synthetic_data.csv
 validation_data.csv
+trained_model.pkl
