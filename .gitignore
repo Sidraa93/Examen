@@ -1,6 +1,7 @@
 # Ignorer les fichiers exportés 
 
 
-.ipynb_checkpoints
-#*.pkl
-#validation_data.csv
+
+model_entrainé.pkl
+synthetic_data.csv
+validation_data.csv
