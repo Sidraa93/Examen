@@ -1,9 +1,6 @@
-# 1.Génération des données : 
-
 # Importation des bibliothèques
-
 from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split, cross_validate
+from sklearn.model_selection import train_test_split, cross_validate, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -12,13 +9,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import joblib
 
-
-# Fonction pour générer des données avec des paramètres variables
-
+# 1. Génération des données
 def generate_data(n_samples=10000, n_features=20, n_informative=10, n_classes=3,
                   n_clusters_per_class=2, class_sep=1.0, random_state=42):
-    # Générer les données synthétiques
+    """
+    Génère des données synthétiques avec des paramètres variables.
+    """
     X, y = make_classification(
         n_samples=n_samples,
         n_features=n_features,
@@ -28,29 +26,12 @@ def generate_data(n_samples=10000, n_features=20, n_informative=10, n_classes=3,
         class_sep=class_sep,
         random_state=random_state
     )
-
-# Conversion en DataFrame
-
+    # Conversion en DataFrame
     data = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(X.shape[1])])
     data["target"] = y
     return data
 
-# Exécution principale
-
-if __name__ == "__main__":
-    data = generate_data()
-    print(f"Données générées : {data.shape[0]} échantillons avec {data.shape[1] - 1} features")
-
-# Sauvegarder les données dans un fichier CSV
-
-    data.to_csv("synthetic_data.csv", index=False)
-    print("Données générées et sauvegardées dans synthetic_data.csv")
-
-
-# 2. Classification :
-
-# Division des données
-
+# 2. Division des données
 def split_data(X, y):
     """
     Divise les données en trois ensembles : entraînement, test et validation.
@@ -59,7 +40,8 @@ def split_data(X, y):
     X_test, X_val, y_test, y_val = train_test_split(X_temp, y_temp, test_size=1/3, random_state=42)
     print(f"Taille des ensembles :\n- Entraînement : {len(X_train)}\n- Test : {len(X_test)}\n- Validation : {len(X_val)}")
     return X_train, X_test, X_val, y_train, y_test, y_val
-# Fonction pour entraîner et évaluer un modèle unique
+
+# 3. Entraînement et évaluation d'un modèle unique
 def train_and_evaluate(X_train, y_train, X_test, y_test, model_choice):
     """
     Entraîne et évalue un modèle choisi.
@@ -85,6 +67,7 @@ def train_and_evaluate(X_train, y_train, X_test, y_test, model_choice):
 
     return model
 
+# 4. Entraînement et évaluation de plusieurs modèles
 def evaluate_multiple_models(X_train, y_train, X_test, y_test):
     """
     Entraîne et évalue plusieurs modèles.
@@ -118,19 +101,7 @@ def evaluate_multiple_models(X_train, y_train, X_test, y_test):
     print(f"\nMeilleur modèle : {type(best_model).__name__} avec une précision de {best_score:.2f}")
     return best_model
 
-
-# 3. Cross-validation et évaluation
-def evaluate_with_cross_validation(X_train, y_train, model, cv=5):
-    """
-    Effectue une validation croisée pour évaluer les performances du modèle.
-    """
-    scoring = ['accuracy', 'f1_weighted']
-    scores = cross_validate(model, X_train, y_train, cv=cv, scoring=scoring, return_train_score=True)
-    mean_accuracy = np.mean(scores['test_accuracy'])
-    print(f"Cross-validation (Accuracy): Moyenne = {mean_accuracy:.2f}")
-    return mean_accuracy
-
-# 4. Affichage de la matrice de confusion
+# 5. Affichage de la matrice de confusion
 def plot_confusion_matrix(y_test, y_pred, model_name):
     """
     Affiche une matrice de confusion.
@@ -143,32 +114,26 @@ def plot_confusion_matrix(y_test, y_pred, model_name):
     plt.title(f"Matrice de Confusion - {model_name}")
     plt.show()
 
-# 5. Optimisation des hyperparamètres avec Grid Search
-def optimize_model_with_grid_search(model, param_grid, X_train, y_train, cv=5):
-    """
-    Optimise les hyperparamètres d'un modèle avec Grid Search.
-    """
-    print(f"\nOptimisation des hyperparamètres pour le modèle : {type(model).__name__}")
-    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=cv, scoring='accuracy', verbose=2)
-    grid_search.fit(X_train, y_train)
-    print(f"Meilleurs paramètres trouvés : {grid_search.best_params_}")
-    return grid_search.best_estimator_
-
 # 6. Exportation du modèle et des données de validation
 def export_model_and_validation_data(model, X_val, y_val, model_filename="model_train.pkl", data_filename="validation_data.csv"):
-    import joblib
-    import pandas as pd
+    """
+    Exporte le modèle entraîné et les données de validation.
+    """
+    try:
+        print("Début de l'exportation du modèle...")
+        joblib.dump(model, model_filename)
+        print(f"Modèle sauvegardé sous le nom : {model_filename}")
+    except Exception as e:
+        print(f"Erreur lors de l'exportation du modèle : {e}")
 
-    # Sauvegarder le modèle
-    joblib.dump(model, model_filename)
-    print(f"Modèle sauvegardé dans le fichier : {model_filename}")
-
-    # Sauvegarder les données de validation
-    validation_data = pd.DataFrame(X_val, columns=[f"feature_{i}" for i in range(X_val.shape[1])])
-    validation_data["target"] = y_val
-    validation_data.to_csv(data_filename, index=False)
-    print(f"Données de validation sauvegardées dans le fichier : {data_filename}")
-
+    try:
+        print("Début de l'exportation des données de validation...")
+        validation_data = pd.DataFrame(X_val, columns=[f"feature_{i}" for i in range(X_val.shape[1])])
+        validation_data["target"] = y_val
+        validation_data.to_csv(data_filename, index=False)
+        print(f"Données de validation sauvegardées sous le nom : {data_filename}")
+    except Exception as e:
+        print(f"Erreur lors de l'exportation des données de validation : {e}")
 
 # 7. Fonction principale
 def main():
@@ -205,9 +170,9 @@ def main():
 
     # Exporter le modèle et les données de validation
     export_model_and_validation_data(
-        model,
-        X_val,
-        y_val,
+        model=model,
+        X_val=X_val,
+        y_val=y_val,
         model_filename="model_train.pkl",
         data_filename="validation_data.csv"
     )
@@ -215,3 +180,4 @@ def main():
 # Exécuter le script principal
 if __name__ == "__main__":
     main()
+

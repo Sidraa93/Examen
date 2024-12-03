@@ -17,7 +17,7 @@ def plot_confusion_matrix(y_true, y_pred, title="Matrice de Confusion"):
 # Charger le modèle entraîné et les données de validation
 def main():
     # Charger le modèle
-    model_filename = "model_train.pkl"
+    model_filename = "trained_model.pkl"
     model = joblib.load(model_filename)
     print(f"Modèle chargé depuis {model_filename}")
 
