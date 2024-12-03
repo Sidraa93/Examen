@@ -68,7 +68,7 @@ def plot_confusion_matrix(y_test, y_pred, model_name):
     plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=np.unique(y_test), yticklabels=np.unique(y_test))
     plt.xlabel("Prédictions")
-    plt.ylabel("Vérités terrain")
+    plt.ylabel("Valeurs actuelles")
     plt.title(f"Matrice de Confusion - {model_name}")
     plt.show()
 
