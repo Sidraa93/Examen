@@ -3,6 +3,7 @@
 from sklearn.datasets import make_classification
 import pandas as pd
 
+
 # Fonction pour générer des données avec des paramètres variables
 
 def generate_data(n_samples=10000, n_features=20, n_informative=10, n_classes=3,
@@ -34,3 +35,5 @@ if __name__ == "__main__":
 
     data.to_csv("synthetic_data.csv", index=False)
     print("Données générées et sauvegardées dans synthetic_data.csv")
+    
+
