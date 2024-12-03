@@ -153,7 +153,7 @@ def optimize_model_with_grid_search(model, param_grid, X_train, y_train, cv=5):
     return grid_search.best_estimator_
 
 # 6. Exportation du modèle et des données de validation
-def export_model_and_validation_data(model, X_val, y_val, model_filename="trained_model.pkl", data_filename="validation_data.csv"):
+def export_model_and_validation_data(model, X_val, y_val, model_filename="model_entrainé.pkl", data_filename="validation_data.csv"):
     import joblib
     import pandas as pd
 
@@ -206,7 +206,7 @@ def main():
         model,
         X_val,
         y_val,
-        model_filename="trained_model.pkl",
+        model_filename="model_entrainé.pkl",
         data_filename="validation_data.csv"
     )
 
