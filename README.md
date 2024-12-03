@@ -124,12 +124,12 @@ Les données sont exportées dans un fichier nommé `synthetic_data.csv` et util
 
 1. **Construire l'image Docker :**
    ```bash
-   docker build -t classification_project .
+   docker build -t mon_projet_final .
    ```
 
 2. **Exécuter le conteneur Docker :**
    ```bash
-   docker run -it --rm classification_project
+   docker run mon_projet_final
    ```
 
 3. **Avec Docker Compose :**
@@ -155,14 +155,5 @@ Les données sont exportées dans un fichier nommé `synthetic_data.csv` et util
 2. Intégrer une interface utilisateur pour rendre le pipeline plus interactif.
 3. Permettre la mise à jour des modèles directement via Docker.
 
----
 
-## **Contributeurs**
 
-- **Sidraa93** : Analyse des données, implémentation des prédictions.  
-- **Dineshan12** : Développement des modèles et optimisation.  
-- **Collaborateurs** : Dockerisation et documentation.
-
----
-
-Ce README revisité est simple, structuré et met en avant l'originalité du projet. Tu peux le personnaliser selon tes besoins ! 🚀
